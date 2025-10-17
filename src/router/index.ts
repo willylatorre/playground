@@ -14,6 +14,11 @@ const router = createRouter({
       component: () => import('../pages/AIChatPage.vue'),
     },
     {
+      path: '/media',
+      name: 'Media',
+      component: () => import('../pages/MediaPage.vue'),
+    },
+    {
       path: '/items',
       name: 'Items',
       component: () => import('../pages/ItemsPage.vue'),

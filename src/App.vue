@@ -1,10 +1,7 @@
 <script setup lang="ts">
-import { ref, computed } from 'vue'
 import AdrianStatus from './components/AdrianStatus.vue'
 import CoffeeCounter from './components/CoffeeCounter.vue'
 import FunFacts from './components/FunFacts.vue'
-
-const searchTerm = ref('')
 
 // Search groups for CommandPalette
 const searchGroups = [
@@ -48,6 +45,18 @@ const searchGroups = [
       },
     ],
   },
+  {
+    id: 'media',
+    label: 'Pet projects',
+    items: [
+      {
+        label: 'Projects & Videos',
+        suffix: 'Personal work and presentations',
+        to: '/media',
+        icon: 'i-lucide-play-circle',
+      },
+    ],
+  },
 ]
 
 const links = [
@@ -67,6 +76,11 @@ const links = [
         to: '/ai-chat',
       },
     ],
+  },
+  {
+    label: 'Pet projects',
+    icon: 'i-lucide-play-circle',
+    to: '/media',
   },
   {
     label: 'Settings',
