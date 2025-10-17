@@ -8,40 +8,46 @@ import (
 	"syscall"
 
 	"github.com/gin-gonic/gin"
+	"playground-server/config"
 	"playground-server/database"
 	"playground-server/handlers"
+	"playground-server/middleware"
+	"playground-server/repository"
 )
 
 func main() {
+	// Load configuration
+	cfg := config.Load()
+	log.Printf("Starting server in %s mode", cfg.Environment)
+
+	// Initialize database with configuration
+	db, err := database.InitDB(cfg.DatabasePath, cfg.MaxOpenConns, cfg.MaxIdleConns)
+	if err != nil {
+		log.Fatalf("Failed to initialize database: %v", err)
+	}
+	defer db.Close()
+
+	// Initialize repository layer
+	coffeeRepo := repository.NewCoffeeRepository(db)
+
+	// Initialize handlers with dependency injection
+	coffeeHandler := handlers.NewCoffeeHandler(coffeeRepo)
+
 	// Initialize Gin router
 	r := gin.Default()
 
 	// Configure trusted proxies (development: trust localhost only)
 	r.SetTrustedProxies([]string{"127.0.0.1", "::1"})
 
-	// Add CORS middleware for frontend communication
-	r.Use(func(c *gin.Context) {
-		c.Header("Access-Control-Allow-Origin", "*")
-		c.Header("Access-Control-Allow-Methods", "GET, POST, PUT, DELETE, OPTIONS")
-		c.Header("Access-Control-Allow-Headers", "Origin, Content-Type, Authorization")
-
-		if c.Request.Method == "OPTIONS" {
-			c.AbortWithStatus(204)
-			return
-		}
-
-		c.Next()
-	})
-
-	// Initialize database (SQLite)
-	database.InitDB()
+	// Apply middleware
+	r.Use(middleware.CORS())
 
 	// API routes
 	api := r.Group("/api")
 	{
 		api.GET("/health", handlers.HealthCheck)
-		api.GET("/coffee", handlers.GetCoffee)
-		api.POST("/coffee/increment", handlers.IncrementCoffee)
+		api.GET("/coffee", coffeeHandler.GetCoffee)
+		api.POST("/coffee/increment", coffeeHandler.IncrementCoffee)
 	}
 
 	// Catch-all handler: serve index.html for client-side routing
@@ -53,10 +59,12 @@ func main() {
 	})
 
 	// Start server
-	port := ":8080"
+	port := ":" + cfg.ServerPort
 	log.Printf("Server starting on port %s", port)
 	go func() {
-		log.Fatal(r.Run(port))
+		if err := r.Run(port); err != nil {
+			log.Fatalf("Failed to start server: %v", err)
+		}
 	}()
 
 	// Wait for interrupt signal to gracefully shutdown the server
@@ -64,8 +72,5 @@ func main() {
 	signal.Notify(quit, syscall.SIGINT, syscall.SIGTERM)
 	<-quit
 	log.Println("Shutting down server...")
-
-	// Close database connection
-	database.Close()
 	log.Println("Server exited")
 }
