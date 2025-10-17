@@ -31,3 +31,14 @@ coverage
 .vagrant
 bin
 Vagrantfile
+
+# Go specific
+*.exe
+*.exe~
+*.dll
+*.so
+*.dylib
+*.test
+*.out
+coverage.out
+vendor/
