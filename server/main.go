@@ -2,6 +2,7 @@ package main
 
 import (
 	"log"
+	"strings"
 
 	"github.com/gin-gonic/gin"
 	"playground-server/handlers"
@@ -32,7 +33,7 @@ func main() {
 	// Initialize database (in-memory for playground)
 	models.InitDB()
 
-	// Routes
+	// API routes
 	api := r.Group("/api")
 	{
 		api.GET("/health", handlers.HealthCheck)
@@ -42,6 +43,14 @@ func main() {
 		api.PUT("/items/:id", handlers.UpdateItem)
 		api.DELETE("/items/:id", handlers.DeleteItem)
 	}
+
+	// Catch-all handler: serve index.html for client-side routing
+	r.NoRoute(func(c *gin.Context) {
+		// Only serve the Vue app for non-API routes
+		if !strings.HasPrefix(c.Request.URL.Path, "/api") {
+			c.File("./dist/index.html")
+		}
+	})
 
 	// Start server
 	port := ":8080"
