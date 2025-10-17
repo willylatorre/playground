@@ -11,6 +11,7 @@ export default defineConfig({
     vue(),
     tailwindcss(),
     ui({
+      colorMode: false,
       ui: {
         colors: {
           primary: 'teal',
@@ -22,6 +23,18 @@ export default defineConfig({
   resolve: {
     alias: {
       '@': fileURLToPath(new URL('./src', import.meta.url)),
+    },
+  },
+  server: {
+    // https: true,
+    // hmr: {
+    //   // host: 'adyen-demos.loca.lt',
+    //   // port: 3001,
+    //   clientPort: 443,
+    //   protocol: 'wss'
+    // },
+    watch: {
+      usePolling: true,
     },
   },
 })

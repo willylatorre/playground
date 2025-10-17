@@ -5,8 +5,23 @@ const router = createRouter({
   routes: [
     {
       path: '/',
-      name: 'Home',
-      component: () => import('../pages/index.vue'),
+      name: 'About Me',
+      component: () => import('../pages/DashboardPage.vue'),
+    },
+    {
+      path: '/ai-chat',
+      name: 'AI Chat',
+      component: () => import('../pages/AIChatPage.vue'),
+    },
+    {
+      path: '/items',
+      name: 'Items',
+      component: () => import('../pages/ItemsPage.vue'),
+    },
+    {
+      path: '/settings',
+      name: 'Settings',
+      component: () => import('../pages/SettingsPage.vue'),
     },
   ],
 })
