@@ -1,0 +1,25 @@
+# Node
+node_modules
+
+# Keep environment variables out of version control
+.env
+
+.vagrant
+.nuxt
+.idea
+.output
+.netlify
+.amplify-hosting
+dist
+
+# IDE
+.idea
+
+.npmrc
+
+# Misc
+.DS_Store
+
+
+bin
+Vagrantfile
