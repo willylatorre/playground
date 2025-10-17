@@ -2,11 +2,14 @@ package main
 
 import (
 	"log"
+	"os"
+	"os/signal"
 	"strings"
+	"syscall"
 
 	"github.com/gin-gonic/gin"
+	"playground-server/database"
 	"playground-server/handlers"
-	"playground-server/models"
 )
 
 func main() {
@@ -30,18 +33,15 @@ func main() {
 		c.Next()
 	})
 
-	// Initialize database (in-memory for playground)
-	models.InitDB()
+	// Initialize database (SQLite)
+	database.InitDB()
 
 	// API routes
 	api := r.Group("/api")
 	{
 		api.GET("/health", handlers.HealthCheck)
-		api.GET("/items", handlers.GetItems)
-		api.POST("/items", handlers.CreateItem)
-		api.GET("/items/:id", handlers.GetItem)
-		api.PUT("/items/:id", handlers.UpdateItem)
-		api.DELETE("/items/:id", handlers.DeleteItem)
+		api.GET("/coffee", handlers.GetCoffee)
+		api.POST("/coffee/increment", handlers.IncrementCoffee)
 	}
 
 	// Catch-all handler: serve index.html for client-side routing
@@ -55,5 +55,17 @@ func main() {
 	// Start server
 	port := ":8080"
 	log.Printf("Server starting on port %s", port)
-	log.Fatal(r.Run(port))
+	go func() {
+		log.Fatal(r.Run(port))
+	}()
+
+	// Wait for interrupt signal to gracefully shutdown the server
+	quit := make(chan os.Signal, 1)
+	signal.Notify(quit, syscall.SIGINT, syscall.SIGTERM)
+	<-quit
+	log.Println("Shutting down server...")
+
+	// Close database connection
+	database.Close()
+	log.Println("Server exited")
 }
