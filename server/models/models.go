@@ -22,21 +22,29 @@ func GetCoffee() (Coffee, error) {
 }
 
 // UpdateCoffeeCounter increments the coffee counter and updates the last_update timestamp
+// Uses RETURNING clause for atomic operation (SQLite 3.35+)
 func UpdateCoffeeCounter() (Coffee, error) {
-	_, err := database.DB.Exec("UPDATE coffee SET counter = counter + 1, last_update = CURRENT_TIMESTAMP WHERE id = (SELECT id FROM coffee LIMIT 1)")
-	if err != nil {
-		return Coffee{}, err
-	}
-
-	return GetCoffee()
+	var coffee Coffee
+	err := database.DB.QueryRow(`
+		UPDATE coffee 
+		SET counter = counter + 1, last_update = CURRENT_TIMESTAMP 
+		WHERE id = (SELECT id FROM coffee LIMIT 1)
+		RETURNING id, counter, last_update
+	`).Scan(&coffee.ID, &coffee.Counter, &coffee.LastUpdate)
+	
+	return coffee, err
 }
 
 // ResetCoffeeCounter resets the coffee counter to 0 and updates the last_update timestamp
+// Uses RETURNING clause for atomic operation (SQLite 3.35+)
 func ResetCoffeeCounter() (Coffee, error) {
-	_, err := database.DB.Exec("UPDATE coffee SET counter = 0, last_update = CURRENT_TIMESTAMP WHERE id = (SELECT id FROM coffee LIMIT 1)")
-	if err != nil {
-		return Coffee{}, err
-	}
-
-	return GetCoffee()
+	var coffee Coffee
+	err := database.DB.QueryRow(`
+		UPDATE coffee 
+		SET counter = 0, last_update = CURRENT_TIMESTAMP 
+		WHERE id = (SELECT id FROM coffee LIMIT 1)
+		RETURNING id, counter, last_update
+	`).Scan(&coffee.ID, &coffee.Counter, &coffee.LastUpdate)
+	
+	return coffee, err
 }

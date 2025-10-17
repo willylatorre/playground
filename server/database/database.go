@@ -3,6 +3,8 @@ package database
 import (
 	"database/sql"
 	"log"
+	"os"
+	"time"
 
 	_ "github.com/mattn/go-sqlite3"
 )
@@ -12,10 +14,23 @@ var DB *sql.DB
 // InitDB initializes the SQLite database connection and creates tables
 func InitDB() {
 	var err error
-	DB, err = sql.Open("sqlite3", "./adrian.db")
+	
+	// Get database path from environment variable or use default
+	dbPath := os.Getenv("DB_PATH")
+	if dbPath == "" {
+		dbPath = "./adrian.db"
+	}
+	
+	DB, err = sql.Open("sqlite3", dbPath)
 	if err != nil {
 		log.Fatal("Failed to open database:", err)
 	}
+
+	// Configure connection pool
+	DB.SetMaxOpenConns(25)
+	DB.SetMaxIdleConns(5)
+	DB.SetConnMaxLifetime(5 * time.Minute)
+	DB.SetConnMaxIdleTime(10 * time.Minute)
 
 	// Test the connection
 	if err = DB.Ping(); err != nil {
