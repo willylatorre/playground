@@ -31,7 +31,8 @@ export interface ChatMessage {
  * ChatRequest represents the incoming chat request from the client
  */
 export interface ChatRequest {
-  message: string;
+  messages: ChatMessage[];
+  prompt: string;
 }
 /**
  * ChatResponse represents a streaming chunk from the AI

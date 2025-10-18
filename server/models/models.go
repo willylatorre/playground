@@ -59,7 +59,8 @@ type ChatMessage struct {
 
 // ChatRequest represents the incoming chat request from the client
 type ChatRequest struct {
-	Message string `json:"message"`
+	Messages []ChatMessage `json:"messages"`
+	Prompt   string        `json:"prompt"`
 }
 
 // ChatResponse represents a streaming chunk from the AI

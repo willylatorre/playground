@@ -1,5 +1,5 @@
 import { ref, type Ref } from 'vue'
-import type { Coffee } from '@/types/api-generated'
+import type { Coffee, ChatMessage } from '@/types/api-generated'
 
 const API_BASE_URL = 'http://localhost:8080/api'
 
@@ -40,7 +40,8 @@ export function useApi() {
   }
 
   const sendChatMessage = async (
-    message: string,
+    messages: ChatMessage[],
+    prompt: string,
     onChunk: (chunk: string) => void,
     onComplete: () => void,
     onError: (error: string) => void
@@ -50,18 +51,28 @@ export function useApi() {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
+          Accept: 'text/event-stream',
         },
-        body: JSON.stringify({ message }),
+        body: JSON.stringify({ messages, prompt }),
       })
 
       if (!response.ok) {
-        const errorData = await response.json()
-        onError(errorData.error || 'Failed to send message')
+        let message = 'Failed to send message'
+        try {
+          const errorData = await response.json()
+          if (errorData?.error) {
+            message = errorData.error
+          }
+        } catch {
+          // ignore JSON parse errors
+        }
+        onError(message)
         return
       }
 
       const reader = response.body?.getReader()
       const decoder = new TextDecoder()
+      let buffer = ''
 
       if (!reader) {
         onError('Failed to read response')
@@ -72,16 +83,37 @@ export function useApi() {
         const { done, value } = await reader.read()
         if (done) break
 
-        const chunk = decoder.decode(value)
-        const lines = chunk.split('\n')
+        buffer += decoder.decode(value, { stream: true })
 
-        for (const line of lines) {
-          if (line.startsWith('data: ')) {
-            const data = line.slice(6)
-            if (data.trim()) {
-              onChunk(data)
-            }
+        let boundaryIndex = buffer.indexOf('\n\n')
+        while (boundaryIndex !== -1) {
+          const rawEvent = buffer.slice(0, boundaryIndex)
+          buffer = buffer.slice(boundaryIndex + 2)
+
+          const dataLines = rawEvent
+            .split('\n')
+            .filter((line) => line.startsWith('data:'))
+            .map((line) => line.replace(/^data:\s?/, ''))
+            .join('\n')
+
+          if (dataLines.trim()) {
+            onChunk(dataLines)
           }
+
+          boundaryIndex = buffer.indexOf('\n\n')
+        }
+      }
+
+      // Flush any remaining buffered data
+      buffer += decoder.decode()
+      if (buffer.trim()) {
+        const dataLines = buffer
+          .split('\n')
+          .filter((line) => line.startsWith('data:'))
+          .map((line) => line.replace(/^data:\s?/, ''))
+          .join('\n')
+        if (dataLines.trim()) {
+          onChunk(dataLines)
         }
       }
 

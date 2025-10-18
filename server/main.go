@@ -13,12 +13,14 @@ import (
 	"playground-server/handlers"
 	"playground-server/middleware"
 	"playground-server/repository"
+	"playground-server/services"
 )
 
 func main() {
 	// Load configuration
 	cfg := config.Load()
 	log.Printf("Starting server in %s mode", cfg.Environment)
+	log.Printf("OpenAI API Key: %s", cfg.OpenAIAPIKey)
 
 	// Initialize database with configuration
 	db, err := database.InitDB(cfg.DatabasePath, cfg.MaxOpenConns, cfg.MaxIdleConns)
@@ -30,9 +32,12 @@ func main() {
 	// Initialize repository layer
 	coffeeRepo := repository.NewCoffeeRepository(db)
 
+	// Initialize services
+	openAIService := services.NewOpenAIService(cfg.OpenAIAPIKey)
+
 	// Initialize handlers with dependency injection
 	coffeeHandler := handlers.NewCoffeeHandler(coffeeRepo)
-	chatHandler := handlers.NewChatHandler(cfg.OpenAIAPIKey)
+	chatHandler := handlers.NewChatHandler(openAIService)
 
 	// Initialize Gin router
 	r := gin.Default()
