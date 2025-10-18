@@ -39,10 +39,63 @@ export function useApi() {
     }
   }
 
+  const sendChatMessage = async (
+    message: string,
+    onChunk: (chunk: string) => void,
+    onComplete: () => void,
+    onError: (error: string) => void
+  ): Promise<void> => {
+    try {
+      const response = await fetch(`${API_BASE_URL}/chat/message`, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({ message }),
+      })
+
+      if (!response.ok) {
+        const errorData = await response.json()
+        onError(errorData.error || 'Failed to send message')
+        return
+      }
+
+      const reader = response.body?.getReader()
+      const decoder = new TextDecoder()
+
+      if (!reader) {
+        onError('Failed to read response')
+        return
+      }
+
+      while (true) {
+        const { done, value } = await reader.read()
+        if (done) break
+
+        const chunk = decoder.decode(value)
+        const lines = chunk.split('\n')
+
+        for (const line of lines) {
+          if (line.startsWith('data: ')) {
+            const data = line.slice(6)
+            if (data.trim()) {
+              onChunk(data)
+            }
+          }
+        }
+      }
+
+      onComplete()
+    } catch (err) {
+      onError(err instanceof Error ? err.message : 'Unknown error occurred')
+    }
+  }
+
   return {
     loading,
     error,
     getCoffee,
     incrementCoffee,
+    sendChatMessage,
   }
 }

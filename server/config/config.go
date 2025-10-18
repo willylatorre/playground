@@ -12,6 +12,7 @@ type Config struct {
 	Environment  string
 	MaxOpenConns int
 	MaxIdleConns int
+	OpenAIAPIKey string
 }
 
 // Load reads configuration from environment variables with sensible defaults
@@ -22,6 +23,7 @@ func Load() *Config {
 		Environment:  getEnv("ENV", "development"),
 		MaxOpenConns: getEnvAsInt("DB_MAX_OPEN_CONNS", 25),
 		MaxIdleConns: getEnvAsInt("DB_MAX_IDLE_CONNS", 5),
+		OpenAIAPIKey: getEnv("OPENAI_API_KEY", ""),
 	}
 }
 

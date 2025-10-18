@@ -32,6 +32,7 @@ func main() {
 
 	// Initialize handlers with dependency injection
 	coffeeHandler := handlers.NewCoffeeHandler(coffeeRepo)
+	chatHandler := handlers.NewChatHandler(cfg.OpenAIAPIKey)
 
 	// Initialize Gin router
 	r := gin.Default()
@@ -48,6 +49,7 @@ func main() {
 		api.GET("/health", handlers.HealthCheck)
 		api.GET("/coffee", coffeeHandler.GetCoffee)
 		api.POST("/coffee/increment", coffeeHandler.IncrementCoffee)
+		api.POST("/chat/message", chatHandler.SendMessage)
 	}
 
 	// Catch-all handler: serve index.html for client-side routing

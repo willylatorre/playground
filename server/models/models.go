@@ -48,3 +48,21 @@ func ResetCoffeeCounter() (Coffee, error) {
 	
 	return coffee, err
 }
+
+// ChatMessage represents a message in a chat conversation
+type ChatMessage struct {
+	ID        string `json:"id"`
+	Role      string `json:"role"`
+	Content   string `json:"content"`
+	Timestamp time.Time `json:"timestamp"`
+}
+
+// ChatRequest represents the incoming chat request from the client
+type ChatRequest struct {
+	Message string `json:"message"`
+}
+
+// ChatResponse represents a streaming chunk from the AI
+type ChatResponse struct {
+	Chunk string `json:"chunk"`
+}

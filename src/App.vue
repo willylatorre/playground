@@ -61,6 +61,10 @@ const searchGroups = [
 
 const links = [
   {
+    label: 'Links',
+    type: 'label',
+  },
+  {
     label: 'About Me',
     icon: 'i-lucide-user',
     to: '/',
@@ -94,21 +98,22 @@ const links = [
   <UApp>
     <UDashboardGroup>
       <!-- Sidebar -->
-      <UDashboardSidebar>
+      <UDashboardSidebar :default-size="20">
         <!-- Header -->
         <template #header>
-          <div class="flex items-center gap-3 px-4 py-3">
+          <div class="flex items-center gap-3 mt-5">
             <div class="w-6 h-6 bg-primary-500 rounded-lg flex items-center justify-center">
               <UIcon name="i-heroicons-code-bracket" class="w-3 h-3 text-white" />
             </div>
-            <div class="flex-1 min-w-0">
-              <h2 class="font-semibold text-slate-900 truncate">Adrian Latorre</h2>
-              <p class="text-xs text-slate-500 truncate">v{{ Math.random().toFixed(2) }}</p>
+            <div class="flex-1">
+              <h2 class="font-semibold text-slate-900">Adrian Latorre</h2>
+              <p class="text-xs text-slate-500 truncate">v1.37</p>
             </div>
           </div>
         </template>
 
         <!-- Navigation -->
+        <UDashboardSearchButton class="mt-4" />
         <UDashboardSearch :groups="searchGroups" />
         <UNavigationMenu :items="links" orientation="vertical" />
 

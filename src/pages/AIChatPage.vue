@@ -1,57 +1,92 @@
 <script setup lang="ts">
-// AI Chat page - blank skeleton for now
+import { ref } from 'vue'
+import { useApi } from '@/composables/useApi'
+import type { ChatMessage } from '@/types/api-generated'
+
+const { sendChatMessage } = useApi()
+
+const messages = ref<ChatMessage[]>([])
+const status = ref<'ready' | 'submitted' | 'streaming' | 'error'>('ready')
+const currentAssistantMessage = ref('')
+
+const handleSubmit = async (prompt: string) => {
+  if (!prompt.trim()) return
+
+  // Add user message
+  const userMessage: ChatMessage = {
+    id: Date.now().toString(),
+    role: 'user',
+    content: prompt,
+    timestamp: new Date().toISOString(),
+  }
+  messages.value.push(userMessage)
+
+  // Prepare assistant message
+  const assistantMessageId = (Date.now() + 1).toString()
+  const assistantMessage: ChatMessage = {
+    id: assistantMessageId,
+    role: 'assistant',
+    content: '',
+    timestamp: new Date().toISOString(),
+  }
+  messages.value.push(assistantMessage)
+  currentAssistantMessage.value = ''
+  status.value = 'streaming'
+
+  // Send message and stream response
+  await sendChatMessage(
+    prompt,
+    (chunk: string) => {
+      // Append chunk to current message
+      currentAssistantMessage.value += chunk
+      const msgIndex = messages.value.findIndex((m) => m.id === assistantMessageId)
+      if (msgIndex !== -1 && messages.value[msgIndex]) {
+        messages.value[msgIndex]!.content = currentAssistantMessage.value
+      }
+    },
+    () => {
+      // Streaming complete
+      status.value = 'ready'
+      currentAssistantMessage.value = ''
+    },
+    (error: string) => {
+      // Error occurred
+      status.value = 'error'
+      const msgIndex = messages.value.findIndex((m) => m.id === assistantMessageId)
+      if (msgIndex !== -1 && messages.value[msgIndex]) {
+        messages.value[msgIndex]!.content = `Error: ${error}`
+      }
+    }
+  )
+}
 </script>
 
 <template>
-  <div class="space-y-6">
+  <div class="space-y-4">
     <!-- Page Header -->
-    <UPageHero
-      title="AI Chat"
-      description="Have a conversation with AI - coming soon!"
-    />
+    <div>
+      <h1 class="text-3xl font-bold text-slate-900 mb-2">AI Chat</h1>
+      <p class="text-slate-600 max-w-2xl">
+        Explore interactions with GenAI powered by a Golang server and OpenAI. This is a learning
+        project to understand streaming responses, clean architecture, and AI integration. Try
+        chatting and see if you can find any easter eggs! 🥚
+      </p>
+    </div>
 
-    <!-- Chat Interface Skeleton -->
-    <UCard>
-      <template #header>
-        <h3 class="text-xl font-semibold">Chat Interface</h3>
+    <!-- Chat Palette -->
+    <UChatPalette>
+      <UChatMessages
+        :messages="messages"
+        :status="status"
+        :should-auto-scroll="true"
+      />
+
+      <template #prompt>
+        <UChatPrompt
+          placeholder="Ask me anything about Go, Vue, or try to find easter eggs..."
+          @submit="handleSubmit"
+        />
       </template>
-
-      <div class="space-y-4">
-        <!-- Chat Messages Area -->
-        <div class="min-h-96 bg-slate-50 rounded-lg p-4 border-2 border-dashed border-slate-200 flex items-center justify-center">
-          <div class="text-center text-slate-500">
-            <UIcon name="i-heroicons-chat-bubble-left-right" class="w-12 h-12 mx-auto mb-3" />
-            <h4 class="font-medium mb-2">Chat Interface Coming Soon</h4>
-            <p class="text-sm">This will be an interactive AI chat experience</p>
-          </div>
-        </div>
-
-        <!-- Message Input -->
-        <div class="flex gap-3">
-          <UInput
-            placeholder="Type your message here..."
-            disabled
-            class="flex-1"
-          />
-          <UButton disabled>
-            <UIcon name="i-heroicons-paper-airplane" class="w-4 h-4" />
-          </UButton>
-        </div>
-
-        <!-- Feature Preview -->
-        <UAlert color="info" variant="subtle">
-          <UIcon name="i-heroicons-information-circle" class="w-5 h-5 mr-3" />
-          <div>
-            <p class="font-medium">Upcoming Features:</p>
-            <ul class="text-sm mt-1 list-disc list-inside">
-              <li>Real-time AI conversations</li>
-              <li>Context-aware responses</li>
-              <li>Chat history and memory</li>
-              <li>Multiple AI personalities</li>
-            </ul>
-          </div>
-        </UAlert>
-      </div>
-    </UCard>
+    </UChatPalette>
   </div>
 </template>

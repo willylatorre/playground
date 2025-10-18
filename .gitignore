@@ -33,6 +33,7 @@ components.d.ts
 
 *.tsbuildinfo
 .vagrant
+.env
 bin
 Vagrantfile
 
