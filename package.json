@@ -7,7 +7,10 @@
     "node": "^20.19.0 || >=22.12.0"
   },
   "scripts": {
-    "dev": "vite",
+    "dev": "run-p dev:*",
+    "dev:server": "cd server && go run main.go",
+    "dev:client": "vite --host",
+    "dev:full": "run-p dev:server \"dev:client {@}\" --",
     "build": "run-p type-check \"build-only {@}\" --",
     "preview": "vite preview",
     "build-only": "vite build",
@@ -15,9 +18,16 @@
     "lint:oxlint": "oxlint . --fix -D correctness --ignore-path .gitignore",
     "lint:eslint": "eslint . --fix",
     "lint": "run-s lint:*",
-    "format": "prettier --write src/"
+    "format": "prettier --write src/",
+    "types:generate": "cd server && ~/go/bin/tygo generate",
+    "types:watch": "cd server && ~/go/bin/tygo generate --watch",
+    "types:check": "echo '⚠️  Remember to run npm run types:generate after updating Go models'",
+    "types:install": "go install github.com/gzuidhof/tygo@latest"
   },
   "dependencies": {
+    "@nuxt/ui": "^4.0.1",
+    "@tailwindcss/vite": "^4.1.14",
+    "tailwindcss": "^4.1.14",
     "vue": "^3.5.22",
     "vue-router": "^4.5.1"
   },
@@ -36,6 +46,7 @@
     "npm-run-all2": "^8.0.4",
     "oxlint": "~1.11.0",
     "prettier": "3.6.2",
+    "sass-embedded": "^1.93.2",
     "typescript": "~5.9.0",
     "vite": "^7.1.7",
     "vite-plugin-vue-devtools": "^8.0.2",
